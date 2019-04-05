@@ -28,3 +28,7 @@ debug
 
 # Exclude binaries
 /find
+
+# git having issues with symlinks
+/testcase/folder5_symlink
+/testcase/folder4/file1_symlink
