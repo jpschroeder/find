@@ -32,3 +32,4 @@ debug
 # git having issues with symlinks
 /testcase/folder5_symlink
 /testcase/folder4/file1_symlink
+/testcase/folder6_sym_empty

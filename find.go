@@ -29,9 +29,15 @@ func find(opt options, root string) []string {
 		skip := false
 
 		if opt.empty {
-			// todo check for empty directories
-			if info.Size() > 0 {
-				skip = true
+			if info.IsDir() {
+				isEmpty, _ := isDirEmpty(path)
+				if isEmpty {
+					skip = true
+				}
+			} else {
+				if info.Size() > 0 {
+					skip = true
+				}
 			}
 		}
 
@@ -42,24 +48,22 @@ func find(opt options, root string) []string {
 			}
 		}
 
-		if skip {
-			return nil
-		}
-		ret = append(ret, addPrefix(root, path))
-
 		if opt.followSym {
 			sympath, _ := filepath.EvalSymlinks(path)
 			if filepath.Clean(path) != sympath {
+				skip = true
 				symret := find(opt, sympath)
 				for _, s := range symret {
-					if s == sympath {
-						continue
-					}
 					actual := strings.Replace(s, sympath, path, 1)
 					ret = append(ret, addPrefix(root, actual))
 				}
 			}
 		}
+
+		if skip {
+			return nil
+		}
+		ret = append(ret, addPrefix(root, path))
 
 		return nil
 	})
@@ -80,15 +84,26 @@ func addPrefix(root string, path string) string {
 	return path
 }
 
+func isDirEmpty(dirname string) (bool, error) {
+	f, err := os.Open(dirname)
+	if err != nil {
+		return false, err
+	}
+	names, err := f.Readdirnames(-1)
+	f.Close()
+	if err != nil {
+		return false, err
+	}
+	return len(names) > 0, nil
+}
+
 func main() {
 	// todo
 	// error handling
-	// directories
-	// symlinks
 	// refactoring
 	// testing
 
-	// In the linux version of the find command the flags come after the starting directory
+	// In the linux version of the find command the name and empty flags come after the starting directory
 	// The prompt listed them before the starting directory.  That is how it is implemented here.
 	name := flag.String("name", "", "Base of file name (the path with the  leading  directories  removed)  matches  shell  pattern  pattern.")
 	followSym := flag.Bool("L", false, "Follow symbolic links.")
