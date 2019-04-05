@@ -8,25 +8,20 @@ import (
 	"strings"
 )
 
-func find(root string) []string {
+func find(empty bool, root string) []string {
 	var ret []string
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			fmt.Printf("failure accessing a path %q: %v\n", path, err)
 			return err
 		}
-		/*
-			if !strings.HasPrefix(path, root) {
-				path = root + path
-			}
-		*/
-		if strings.HasPrefix(root, "./") && !strings.HasPrefix(path, "./") {
-			path = "./" + path
+
+		skip := empty && info.Size() > 0
+		if skip {
+			return nil
 		}
-		if path == "./" {
-			path = "."
-		}
-		ret = append(ret, path)
+		ret = append(ret, addPrefix(root, path))
+
 		return nil
 	})
 	if err != nil {
@@ -36,7 +31,21 @@ func find(root string) []string {
 	return ret
 }
 
+func addPrefix(root string, path string) string {
+	if strings.HasPrefix(root, "./") && !strings.HasPrefix(path, "./") {
+		return "./" + path
+	}
+	if path == "./" {
+		return "."
+	}
+	return path
+}
+
 func main() {
+	// In the linux version of the find command the -empty flag comes after the starting directory
+	// The prompt listed it before the starting directory.  That is how it is implemented here.
+	empty := flag.Bool("empty", false, "File is empty and is either a regular file or a directory.")
+
 	flag.Parse()
 
 	args := flag.Args()
@@ -46,7 +55,7 @@ func main() {
 		root = args[0]
 	}
 
-	output := find(root)
+	output := find(*empty, root)
 	for _, entry := range output {
 		fmt.Println(entry)
 	}
