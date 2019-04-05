@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,8 +15,16 @@ func find(root string) []string {
 			fmt.Printf("failure accessing a path %q: %v\n", path, err)
 			return err
 		}
-		if !strings.HasPrefix(path, root) {
-			path = root + path
+		/*
+			if !strings.HasPrefix(path, root) {
+				path = root + path
+			}
+		*/
+		if strings.HasPrefix(root, "./") && !strings.HasPrefix(path, "./") {
+			path = "./" + path
+		}
+		if path == "./" {
+			path = "."
 		}
 		ret = append(ret, path)
 		return nil
@@ -28,7 +37,16 @@ func find(root string) []string {
 }
 
 func main() {
-	output := find("./")
+	flag.Parse()
+
+	args := flag.Args()
+
+	root := filepath.FromSlash("./")
+	if len(args) > 0 {
+		root = args[0]
+	}
+
+	output := find(root)
 	for _, entry := range output {
 		fmt.Println(entry)
 	}
