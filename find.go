@@ -8,6 +8,13 @@ import (
 	"strings"
 )
 
+// Notes: There were several items that I would have done given a bit more time.
+// I tried to prioritize working features in the time given
+//  - Refactoring with helper functions
+//  - Additional code comments
+//  - Unit testing
+//  - Additional find options
+
 type options struct {
 	name      string
 	followSym bool
@@ -30,8 +37,10 @@ func find(opt options, root string) []string {
 
 		if opt.empty {
 			if info.IsDir() {
-				isEmpty, _ := isDirEmpty(path)
-				if isEmpty {
+				isEmpty, err := isDirEmpty(path)
+				if err != nil {
+					fmt.Printf("failure accessing a path %q: %v\n", path, err)
+				} else if isEmpty {
 					skip = true
 				}
 			} else {
@@ -42,8 +51,11 @@ func find(opt options, root string) []string {
 		}
 
 		if opt.name != "" {
-			match, _ := filepath.Match(opt.name, info.Name())
-			if !match {
+			match, err := filepath.Match(opt.name, info.Name())
+			if err != nil {
+				fmt.Printf("invalid name pattern")
+				skip = true
+			} else if !match {
 				skip = true
 			}
 		}
@@ -98,11 +110,6 @@ func isDirEmpty(dirname string) (bool, error) {
 }
 
 func main() {
-	// todo
-	// error handling
-	// refactoring
-	// testing
-
 	// In the linux version of the find command the name and empty flags come after the starting directory
 	// The prompt listed them before the starting directory.  That is how it is implemented here.
 	name := flag.String("name", "", "Base of file name (the path with the  leading  directories  removed)  matches  shell  pattern  pattern.")
